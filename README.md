@@ -33,6 +33,22 @@ When you first run AutoClicker, Windows Defender SmartScreen may display a warni
 
 The warning typically only appears the first time you run the application.
 
+## Antivirus False Positives
+
+Some antivirus programs, including Windows Defender, may flag AutoClicker as a potential threat (such as "Trojan:Win32/Wacatac.C!ml"). This is a **false positive** because:
+
+1. AutoClicker simulates mouse clicks programmatically, which is behavior similar to some malware
+2. It uses low-level system hooks to capture and simulate input events
+3. Many auto-clicker tools face the same issue with antivirus software
+
+**If your antivirus flags this application:**
+
+1. **Add an exclusion** in your antivirus settings for the AutoClicker.exe file
+2. **Report the false positive** to your antivirus vendor
+3. If you're concerned, you can build the application from source to ensure it's safe
+
+This application is open-source, so you can review all the code to verify its safety.
+
 ## Build Requirements
 
 - .NET Framework 4.7.2 or higher

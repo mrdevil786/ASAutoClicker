@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("AutoClicker")]
-[assembly: AssemblyDescription("A simple autoclicker application")]
+[assembly: AssemblyDescription("A legitimate automation tool for simulating mouse clicks at specified intervals")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("AutoClicker")]
-[assembly: AssemblyCopyright("Copyright © 2023")]
+[assembly: AssemblyCompany("ASAutoClicker Team")]
+[assembly: AssemblyProduct("ASAutoClicker")]
+[assembly: AssemblyCopyright("Copyright © 2023-2024 ASAutoClicker Team")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

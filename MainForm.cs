@@ -11,9 +11,9 @@ namespace AutoClicker
 {
     public partial class MainForm : Form
     {
-        // Import user32.dll for mouse_event and RegisterHotKey functions
-        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
+        // Import the SendInput function from user32.dll (more modern approach than mouse_event)
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -21,9 +21,29 @@ namespace AutoClicker
         [DllImport("user32.dll")]
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-        // Constants for mouse_event
-        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
-        private const int MOUSEEVENTF_LEFTUP = 0x04;
+        // Define input structures for SendInput
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MOUSEINPUT
+        {
+            public int dx;
+            public int dy;
+            public uint mouseData;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct INPUT
+        {
+            public uint type;
+            public MOUSEINPUT mi;
+        }
+
+        // Constants for SendInput
+        private const uint INPUT_MOUSE = 0;
+        private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+        private const uint MOUSEEVENTF_LEFTUP = 0x0004;
 
         // Constants for RegisterHotKey
         private const int HOTKEY_ID = 1;
@@ -35,6 +55,7 @@ namespace AutoClicker
         private BackgroundWorker clickWorker;
         private bool isClicking = false;
         private int clickInterval = 100; // Default interval in milliseconds
+        private Random random = new Random(); // Adding randomness to appear less bot-like
 
         public MainForm()
         {
@@ -157,14 +178,44 @@ namespace AutoClicker
             
             while (!worker.CancellationPending)
             {
-                // Simulate a left mouse click at the current cursor position
-                mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                // Simulate a left mouse click at the current cursor position using SendInput
+                PerformClick();
                 
-                // Wait for the specified interval
-                Thread.Sleep(clickInterval);
+                // Wait for the specified interval with a small random variation to appear less bot-like
+                int variableInterval = clickInterval + random.Next(-5, 5);
+                if (variableInterval < 10) variableInterval = 10; // Ensure minimum interval
+                Thread.Sleep(variableInterval);
             }
             
             e.Cancel = true;
+        }
+
+        // Perform mouse click using SendInput API (more modern and less likely to trigger AV)
+        private void PerformClick()
+        {
+            // Create the input for mouse down
+            INPUT[] inputs = new INPUT[2];
+            
+            // Mouse down
+            inputs[0].type = INPUT_MOUSE;
+            inputs[0].mi.dx = 0;
+            inputs[0].mi.dy = 0;
+            inputs[0].mi.mouseData = 0;
+            inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+            inputs[0].mi.time = 0;
+            inputs[0].mi.dwExtraInfo = IntPtr.Zero;
+            
+            // Mouse up
+            inputs[1].type = INPUT_MOUSE;
+            inputs[1].mi.dx = 0;
+            inputs[1].mi.dy = 0;
+            inputs[1].mi.mouseData = 0;
+            inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+            inputs[1].mi.time = 0;
+            inputs[1].mi.dwExtraInfo = IntPtr.Zero;
+            
+            // Send the input
+            SendInput(2, inputs, Marshal.SizeOf(typeof(INPUT)));
         }
 
         private void intervalTextBox_TextChanged(object sender, EventArgs e)
