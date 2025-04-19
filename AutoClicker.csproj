@@ -34,6 +34,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\AppIcon.ico</ApplicationIcon>
+    <GenerateConfigurationFile>false</GenerateConfigurationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -81,10 +82,16 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\AppIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- Custom target to remove config file after build -->
+  <Target Name="RemoveConfigFile" AfterTargets="Build">
+    <Delete Files="$(OutputPath)$(AssemblyName).exe.config" />
+  </Target>
 </Project> 

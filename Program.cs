@@ -3,6 +3,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Win32;
 
 namespace AutoClicker
 {
@@ -25,29 +26,29 @@ namespace AutoClicker
 
         /// <summary>
         /// The main entry point for the application.
-        /// Uses a mutex to ensure only one instance runs at a time.
         /// </summary>
         [STAThread]
         static void Main()
         {
+            // Check for correct .NET Framework version programmatically instead of using config file
+            EnsureCorrectFrameworkVersion();
+
             try
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 
-                // Check for existing instances using a named mutex
+                // Ensure only one instance is running
                 bool createdNew;
-                using (Mutex applicationMutex = new Mutex(true, ApplicationMutexName, out createdNew))
+                using (System.Threading.Mutex mutex = new System.Threading.Mutex(true, "AutoClickerApplicationMutex", out createdNew))
                 {
                     if (createdNew)
                     {
-                        // No existing instance found, run the application
-                        RunApplication();
+                        Application.Run(new MainForm());
                     }
                     else
                     {
-                        // Find existing instance and bring it to foreground
-                        ActivateExistingInstance();
+                        MessageBox.Show("AutoClicker is already running.", "AutoClicker", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }
@@ -86,6 +87,59 @@ namespace AutoClicker
                     }
                     return; // Exit the new instance
                 }
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the correct .NET Framework version is installed
+        /// This replaces the functionality of the .config file specifying the framework version
+        /// </summary>
+        private static void EnsureCorrectFrameworkVersion()
+        {
+            try
+            {
+                // Check if .NET Framework 4.7.2 or higher is installed
+                const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
+                using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(subkey))
+                {
+                    if (ndpKey != null && ndpKey.GetValue("Release") != null)
+                    {
+                        int releaseKey = (int)ndpKey.GetValue("Release");
+                        // .NET Framework 4.7.2 corresponds to value 461808
+                        if (releaseKey < 461808)
+                        {
+                            MessageBox.Show(
+                                "This application requires .NET Framework 4.7.2 or higher.\n" +
+                                "Please install the latest .NET Framework from Microsoft's website.",
+                                "Framework Version Error",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+                            Environment.Exit(1);
+                        }
+                    }
+                    else
+                    {
+                        // Could not detect .NET Framework version
+                        MessageBox.Show(
+                            "Could not detect .NET Framework version.\n" +
+                            "This application requires .NET Framework 4.7.2 or higher.",
+                            "Framework Detection Error",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        Environment.Exit(1);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions during the check
+                MessageBox.Show(
+                    $"Error checking .NET Framework version: {ex.Message}\n" +
+                    "This application requires .NET Framework 4.7.2 or higher.",
+                    "Framework Check Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                Environment.Exit(1);
             }
         }
     }
