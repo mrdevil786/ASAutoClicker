@@ -1,0 +1,50 @@
+name: Build AutoClicker
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+    
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.1.1
+    
+    - name: Restore NuGet packages
+      run: nuget restore AutoClicker.sln
+      
+    - name: Build application
+      run: msbuild AutoClicker.sln /p:Configuration=Release
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: AutoClicker
+        path: |
+          bin/Release/AutoClicker.exe
+          bin/Release/app_icon.ico
+          bin/Release/AutoClicker.exe.config
+          
+    - name: Create release zip
+      run: |
+        mkdir Release
+        copy bin\Release\AutoClicker.exe Release\
+        copy bin\Release\app_icon.ico Release\
+        copy bin\Release\AutoClicker.exe.config Release\
+        powershell Compress-Archive -Path Release\* -DestinationPath AutoClicker.zip
+      
+    - name: Upload release zip
+      uses: actions/upload-artifact@v3
+      with:
+        name: AutoClickerZip
+        path: AutoClicker.zip 

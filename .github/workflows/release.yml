@@ -1,0 +1,69 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Push events to tags matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+    
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.1.1
+    
+    - name: Restore NuGet packages
+      run: nuget restore AutoClicker.sln
+      
+    - name: Build application
+      run: msbuild AutoClicker.sln /p:Configuration=Release
+      
+    - name: Create release zip
+      run: |
+        mkdir Release
+        copy bin\Release\AutoClicker.exe Release\
+        copy bin\Release\app_icon.ico Release\
+        copy bin\Release\AutoClicker.exe.config Release\
+        powershell Compress-Archive -Path Release\* -DestinationPath AutoClicker.zip
+    
+    - name: Extract version from tag
+      id: get_version
+      shell: bash
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: AutoClicker ${{ steps.get_version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+        body: |
+          AutoClicker version ${{ steps.get_version.outputs.VERSION }}
+          
+          Features:
+          - Start/Stop clicking with global hotkey (Ctrl+Shift+A)
+          - Adjustable click interval in milliseconds
+          - System tray icon for minimized operation
+          - Simulates left mouse clicks at the current cursor position
+          - Background operation with minimal resource usage
+          - Single instance application (prevents multiple instances)
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./AutoClicker.zip
+        asset_name: AutoClicker-${{ steps.get_version.outputs.VERSION }}.zip
+        asset_content_type: application/zip 
