@@ -87,7 +87,4 @@
     <EmbeddedResource Include="Resources\AppIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>if exist "$(TargetPath).config" del "$(TargetPath).config"</PostBuildEvent>
-  </PropertyGroup>
 </Project> 

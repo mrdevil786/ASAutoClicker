@@ -33,6 +33,7 @@ jobs:
       run: |
         mkdir Release
         copy bin\Release\AutoClicker.exe Release\
+        copy bin\Release\AutoClicker.exe.config Release\
         powershell Compress-Archive -Path Release\* -DestinationPath AutoClicker.zip
     
     - name: Extract version from tag

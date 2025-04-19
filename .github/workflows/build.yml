@@ -33,12 +33,14 @@ jobs:
         path: |
           bin/Release/AutoClicker.exe
           bin/Release/app_icon.ico
+          bin/Release/AutoClicker.exe.config
           
     - name: Create release zip
       run: |
         mkdir Release
         copy bin\Release\AutoClicker.exe Release\
         copy bin\Release\app_icon.ico Release\
+        copy bin\Release\AutoClicker.exe.config Release\
         powershell Compress-Archive -Path Release\* -DestinationPath AutoClicker.zip
       
     - name: Upload release zip
