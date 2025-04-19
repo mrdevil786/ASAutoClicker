@@ -47,6 +47,15 @@ Some antivirus programs, including Windows Defender, may flag AutoClicker as a p
 2. **Report the false positive** to your antivirus vendor
 3. If you're concerned, you can build the application from source to ensure it's safe
 
+### Code Improvements to Reduce Detections
+
+To minimize false positive detections, we've implemented several best practices:
+
+1. Using modern Windows APIs (`SendInput` instead of `mouse_event`)
+2. Adding human-like randomization to click timing
+3. Implementing proper error handling and code structure
+4. Providing detailed assembly information and documentation
+
 This application is open-source, so you can review all the code to verify its safety.
 
 ## Build Requirements
