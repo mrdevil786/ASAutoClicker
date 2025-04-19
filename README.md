@@ -1,6 +1,6 @@
-# AutoClicker (ASClicker)
+# AutoClicker (ASAutoClicker)
 
-![Build Status](https://github.com/mrdevil786/ASClicker/actions/workflows/build.yml/badge.svg)
+![Build Status](https://github.com/mrdevil786/ASAutoClicker/actions/workflows/build.yml/badge.svg)
 
 A simple Windows application that simulates mouse clicks at specified intervals.
 
@@ -15,13 +15,23 @@ A simple Windows application that simulates mouse clicks at specified intervals.
 
 ## How to Use
 
-1. Download the latest release from the [Releases](https://github.com/mrdevil786/ASClicker/releases) page
+1. Download the latest release from the [Releases](https://github.com/mrdevil786/ASAutoClicker/releases) page
 2. Launch the application (AutoClicker.exe)
 3. Set the click interval in milliseconds (default: 100ms)
 4. Press the "Start" button or use the global hotkey (Ctrl+Shift+A) to start clicking
 5. Press the same hotkey (Ctrl+Shift+A) to stop clicking
 6. The application can be minimized to the system tray
 7. Right-click the tray icon to show the application or exit it
+
+## Important Note about Windows Security Warning
+
+When you first run AutoClicker, Windows Defender SmartScreen may display a warning because the application is not signed with a code signing certificate. This is normal for applications from individual developers who haven't purchased a code signing certificate.
+
+**To run the application when this warning appears:**
+1. Click on "More info" in the warning dialog
+2. Click "Run anyway"
+
+The warning only appears the first time you run the application.
 
 ## Build Requirements
 
@@ -33,7 +43,7 @@ A simple Windows application that simulates mouse clicks at specified intervals.
 
 1. Clone the repository:
    ```
-   git clone https://github.com/mrdevil786/ASClicker.git
+   git clone https://github.com/mrdevil786/ASAutoClicker.git
    ```
 2. Open the solution in Visual Studio
 3. Build the solution (Ctrl+Shift+B)
