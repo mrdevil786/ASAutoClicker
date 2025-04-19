@@ -48,6 +48,19 @@ namespace AutoClicker
             clickWorker.DoWork += ClickWorker_DoWork;
             clickWorker.WorkerSupportsCancellation = true;
 
+            // Set up context menu items
+            if (contextMenuStrip.Items.Count == 1) // Only has Exit by default
+            {
+                ToolStripMenuItem showMenuItem = new ToolStripMenuItem("Show");
+                showMenuItem.Click += ShowMenuItem_Click;
+                
+                // Insert at the beginning
+                contextMenuStrip.Items.Insert(0, showMenuItem);
+                
+                // Add a separator between Show and Exit
+                contextMenuStrip.Items.Insert(1, new ToolStripSeparator());
+            }
+
             // Register hotkey (Ctrl+Shift+A)
             RegisterHotKey(this.Handle, HOTKEY_ID, MOD_CONTROL | MOD_SHIFT, VK_A);
         }
@@ -155,12 +168,25 @@ namespace AutoClicker
             CloseApplication();
         }
         
+        private void ShowMenuItem_Click(object sender, EventArgs e)
+        {
+            RestoreFromTray();
+        }
+
         private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            // Show the form when the user double-clicks on the notify icon
+            RestoreFromTray();
+        }
+
+        /// <summary>
+        /// Restores the application window from system tray
+        /// </summary>
+        public void RestoreFromTray()
+        {
             this.Show();
             this.WindowState = FormWindowState.Normal;
             this.Activate();
+            this.BringToFront();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
