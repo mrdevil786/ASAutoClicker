@@ -29,34 +29,6 @@ jobs:
     - name: Build application
       run: msbuild AutoClicker.sln /p:Configuration=Release
       
-    - name: Create application manifest
-      run: |
-        echo '<?xml version="1.0" encoding="utf-8"?>' > app.manifest
-        echo '<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">' >> app.manifest
-        echo '  <assemblyIdentity version="1.1.0.0" name="ASAutoClicker" />' >> app.manifest
-        echo '  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">' >> app.manifest
-        echo '    <security>' >> app.manifest
-        echo '      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">' >> app.manifest
-        echo '        <requestedExecutionLevel level="asInvoker" uiAccess="false" />' >> app.manifest
-        echo '      </requestedPrivileges>' >> app.manifest
-        echo '    </security>' >> app.manifest
-        echo '  </trustInfo>' >> app.manifest
-        echo '  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">' >> app.manifest
-        echo '    <application>' >> app.manifest
-        echo '      <!-- Windows 10 and 11 -->' >> app.manifest
-        echo '      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />' >> app.manifest
-        echo '    </application>' >> app.manifest
-        echo '  </compatibility>' >> app.manifest
-        echo '</assembly>' >> app.manifest
-      
-    - name: Add manifest to executable
-      run: |
-        # Install the Windows SDK tools
-        choco install windows-sdk-10-version-2004-all -y
-        
-        # Add the manifest to the executable
-        & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\mt.exe" -manifest app.manifest -outputresource:"bin\Release\AutoClicker.exe;1"
-      
     - name: Create release zip
       run: |
         mkdir Release
@@ -69,7 +41,6 @@ jobs:
       shell: bash
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
     
-    # Using the newer softprops/action-gh-release action instead of the deprecated actions/create-release
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
@@ -87,7 +58,7 @@ jobs:
           - Background operation with minimal resource usage
           - Single instance application (prevents multiple instances)
           
-          Note: If Windows Defender SmartScreen shows a warning, you can click "More info" and then "Run anyway" to use the application.
+          Note: If Windows SmartScreen shows a warning, click "More info" and then "Run anyway" to use the application.
         files: AutoClicker.zip # This automatically uploads the asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

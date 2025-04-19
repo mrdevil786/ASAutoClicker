@@ -23,15 +23,15 @@ A simple Windows application that simulates mouse clicks at specified intervals.
 6. The application can be minimized to the system tray
 7. Right-click the tray icon to show the application or exit it
 
-## Important Note about Windows Security Warning
+## Windows Security Warning
 
-When you first run AutoClicker, Windows Defender SmartScreen may display a warning because the application is not signed with a code signing certificate. This is normal for applications from individual developers who haven't purchased a code signing certificate.
+When you first run AutoClicker, Windows Defender SmartScreen may display a warning. This is normal for smaller applications and utilities.
 
 **To run the application when this warning appears:**
 1. Click on "More info" in the warning dialog
 2. Click "Run anyway"
 
-The warning only appears the first time you run the application.
+The warning typically only appears the first time you run the application.
 
 ## Build Requirements
 
