@@ -81,6 +81,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="app_icon.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
