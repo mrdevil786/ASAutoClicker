@@ -50,4 +50,7 @@ _ReSharper*/
 # Others
 *.exe
 *.pdb
-*.dll 
+*.dll
+
+# Ignore exe.config files
+*.exe.config 
