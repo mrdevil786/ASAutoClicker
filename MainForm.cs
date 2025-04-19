@@ -44,23 +44,11 @@ namespace AutoClicker
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
             this.Text = "AutoClicker v" + version.Major + "." + version.Minor + "." + version.Build;
 
-            // Explicitly set the form icon
-            try
+            // Use the embedded icon
+            try 
             {
-                string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app_icon.ico");
-                if (File.Exists(iconPath))
-                {
-                    this.Icon = new Icon(iconPath);
-                }
-                else
-                {
-                    // Try to find the icon in the application directory
-                    iconPath = "app_icon.ico";
-                    if (File.Exists(iconPath))
-                    {
-                        this.Icon = new Icon(iconPath);
-                    }
-                }
+                // Use the application icon already set in the project properties
+                this.Icon = Properties.Resources.AppIcon ?? SystemIcons.Application;
             }
             catch (Exception ex)
             {
