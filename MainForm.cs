@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using System.IO;
+using System.Reflection;
 
 namespace AutoClicker
 {
@@ -37,6 +39,34 @@ namespace AutoClicker
         public MainForm()
         {
             InitializeComponent();
+
+            // Set the form title with version info
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            this.Text = "AutoClicker v" + version.Major + "." + version.Minor + "." + version.Build;
+
+            // Explicitly set the form icon
+            try
+            {
+                string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app_icon.ico");
+                if (File.Exists(iconPath))
+                {
+                    this.Icon = new Icon(iconPath);
+                }
+                else
+                {
+                    // Try to find the icon in the application directory
+                    iconPath = "app_icon.ico";
+                    if (File.Exists(iconPath))
+                    {
+                        this.Icon = new Icon(iconPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Just log or ignore the error - the default icon will be used
+                Console.WriteLine("Error loading icon: " + ex.Message);
+            }
 
             // Set up NotifyIcon
             notifyIcon.Icon = this.Icon;
