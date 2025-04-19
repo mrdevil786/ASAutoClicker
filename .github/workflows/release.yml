@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'  # Push events to tags matching v*, i.e. v1.0, v20.15.10
 
+# Add explicit permissions for the workflow
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -37,14 +42,11 @@ jobs:
       shell: bash
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
     
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Using the newer softprops/action-gh-release action instead of the deprecated actions/create-release
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: AutoClicker ${{ steps.get_version.outputs.VERSION }}
+        name: AutoClicker ${{ steps.get_version.outputs.VERSION }}
         draft: false
         prerelease: false
         body: |
@@ -57,13 +59,6 @@ jobs:
           - Simulates left mouse clicks at the current cursor position
           - Background operation with minimal resource usage
           - Single instance application (prevents multiple instances)
-    
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
+        files: AutoClicker.zip # This automatically uploads the asset
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./AutoClicker.zip
-        asset_name: AutoClicker-${{ steps.get_version.outputs.VERSION }}.zip
-        asset_content_type: application/zip 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
