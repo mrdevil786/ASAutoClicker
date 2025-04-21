@@ -1,4 +1,4 @@
-namespace AutoClickerr
+namespace AutoClicker
 {
     partial class MainForm
     {
