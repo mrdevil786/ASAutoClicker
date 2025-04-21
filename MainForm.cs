@@ -43,7 +43,6 @@ namespace AutoClicker
 
         // Constants for SendInput
         private const uint INPUT_MOUSE = 0;
-        private const uint INPUT_MOUSE = 0;
         private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         private const uint MOUSEEVENTF_LEFTUP = 0x0004;
         private const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
@@ -409,67 +408,6 @@ namespace AutoClicker
             
             // Close the application
             Application.Exit();
-        }
-
-        private void intervalTextBox_TextChanged(object sender, EventArgs e)
-        {
-            // Validate and update the click interval
-            if (int.TryParse(intervalTextBox.Text, out int newInterval) && newInterval > 0)
-            {
-                clickInterval = newInterval;
-            }
-            else
-            {
-                // Optionally provide feedback or reset to default if invalid
-                // For now, just keep the last valid interval
-                // Or maybe show a tooltip: toolTip1.Show("Please enter a positive number.", intervalTextBox, 1000);
-            }
-        }
-
-        private void ShowMenuItem_Click(object sender, EventArgs e)
-        {
-            // Restore the window if minimized
-            this.Show();
-            this.WindowState = FormWindowState.Normal;
-            this.ShowInTaskbar = true;
-        }
-
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // Exit the application
-            Application.Exit();
-        }
-
-        private void MainForm_Resize(object sender, EventArgs e)
-        {
-            // Hide the form and show the notify icon when minimized
-            if (this.WindowState == FormWindowState.Minimized)
-            {
-                this.Hide();
-                this.ShowInTaskbar = false;
-                notifyIcon.Visible = true;
-            }
-        }
-
-        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            // Show the form when the notify icon is double-clicked
-            ShowMenuItem_Click(sender, e);
-        }
-
-        private void startStopButton_Click(object sender, EventArgs e)
-        {
-            ToggleClicking();
-        }
-
-        private void MainForm_Resize(object sender, EventArgs e)
-        {
-            // Minimize to tray
-            if (this.WindowState == FormWindowState.Minimized)
-            {
-                this.Hide();
-                notifyIcon.ShowBalloonTip(2000, "AutoClicker", "AutoClicker is now running in the system tray", ToolTipIcon.Info);
-            }
         }
     }
 }
