@@ -487,13 +487,20 @@ namespace AutoClicker
 
         private void CloseApplication()
         {
-            // Stop the clicker if running
+            // Stop clicking if active
             if (_isClicking)
             {
                 StopClicking();
             }
             
-            // Unregister hotkey
+            // Clean up background worker
+            if (_clickWorker != null && _clickWorker.IsBusy)
+            {
+                _clickWorker.CancelAsync();
+                Thread.Sleep(50); // Brief pause to allow worker to complete
+            }
+            
+            // Unregister the hotkey if it was registered
             if (_hotkeyRegistered)
             {
                 UnregisterHotKey(this.Handle, HOTKEY_ID);
@@ -505,52 +512,6 @@ namespace AutoClicker
             
             // Close the application
             Application.Exit();
-        }
-        
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // Clean up resources
-                if (_clickWorker != null)
-                {
-                    if (_clickWorker.IsBusy)
-                    {
-                        _clickWorker.CancelAsync();
-                        // Give a short time for worker to complete
-                        Thread.Sleep(100);
-                    }
-                    _clickWorker.Dispose();
-                }
-                
-                // Stop the stopwatch if it's running
-                if (_durationStopwatch != null && _durationStopwatch.IsRunning)
-                {
-                    _durationStopwatch.Stop();
-                }
-                
-                // Unregister hotkey to be safe
-                if (_hotkeyRegistered)
-                {
-                    try
-                    {
-                        UnregisterHotKey(this.Handle, HOTKEY_ID);
-                        _hotkeyRegistered = false;
-                    }
-                    catch
-                    {
-                        // Ignore errors during cleanup
-                    }
-                }
-                
-                // Dispose components
-                if (components != null)
-                {
-                    components.Dispose();
-                }
-            }
-            
-            base.Dispose(disposing);
         }
     }
 }

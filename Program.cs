@@ -26,7 +26,7 @@ namespace AutoClicker
         private const int SW_RESTORE = 9;
 
         // Mutex name for single instance check - include user ID to allow multiple users to run the app
-        private static readonly string ApplicationMutexName = $"AutoClickerApplicationMutex-{GetCurrentUserSid()}";
+        private static string ApplicationMutexName = $"AutoClickerApplicationMutex-{GetCurrentUserSid()}";
 
         // Timer to retry finding and activating existing instance 
         private static System.Threading.Timer retryTimer;
@@ -40,7 +40,7 @@ namespace AutoClicker
         static void Main()
         {
             // Enable better-looking, properly scaled controls and visual styles
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            // SetHighDpiMode is not available in .NET Framework 4.7.2, removing it
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             
@@ -281,7 +281,7 @@ namespace AutoClicker
                     }
                     
                     // Could not detect .NET Framework version
-                    DialogResult result = MessageBox.Show(
+                    DialogResult downloadResult = MessageBox.Show(
                         "Could not detect .NET Framework version.\n" +
                         "This application requires .NET Framework 4.7.2 or higher.\n\n" +
                         "Would you like to open the download page?",
@@ -289,7 +289,7 @@ namespace AutoClicker
                         MessageBoxButtons.YesNo,
                         MessageBoxIcon.Error);
                         
-                    if (result == DialogResult.Yes)
+                    if (downloadResult == DialogResult.Yes)
                     {
                         // Open Microsoft's .NET download page
                         Process.Start(new ProcessStartInfo
