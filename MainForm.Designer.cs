@@ -175,10 +175,10 @@ namespace AutoClicker
             this.groupBoxClickOptions.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.groupBoxClickOptions.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBoxClickOptions.Location = new System.Drawing.Point(13, 73);
-            this.groupBoxClickOptions.Margin = new System.Windows.Forms.Padding(3, 3, 3, 8);
+            this.groupBoxClickOptions.Margin = new System.Windows.Forms.Padding(3, 3, 3, 10);
             this.groupBoxClickOptions.Name = "groupBoxClickOptions";
-            this.groupBoxClickOptions.Padding = new System.Windows.Forms.Padding(10);
-            this.groupBoxClickOptions.Size = new System.Drawing.Size(258, 134);
+            this.groupBoxClickOptions.Padding = new System.Windows.Forms.Padding(12);
+            this.groupBoxClickOptions.Size = new System.Drawing.Size(258, 132);
             this.groupBoxClickOptions.TabIndex = 6;
             this.groupBoxClickOptions.TabStop = false;
             this.groupBoxClickOptions.Text = "Click Options";
@@ -189,7 +189,7 @@ namespace AutoClicker
             this.numericUpDownDuration.BackColor = System.Drawing.Color.White;
             this.numericUpDownDuration.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.numericUpDownDuration.Enabled = false;
-            this.numericUpDownDuration.Location = new System.Drawing.Point(126, 91);
+            this.numericUpDownDuration.Location = new System.Drawing.Point(140, 91);
             this.numericUpDownDuration.Maximum = new decimal(new int[] {
             3600,
             0,
@@ -214,9 +214,10 @@ namespace AutoClicker
             // 
             this.radioButtonDuration.AutoSize = true;
             this.radioButtonDuration.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.radioButtonDuration.Location = new System.Drawing.Point(13, 91);
+            this.radioButtonDuration.Location = new System.Drawing.Point(18, 91);
             this.radioButtonDuration.Name = "radioButtonDuration";
-            this.radioButtonDuration.Size = new System.Drawing.Size(106, 19);
+            this.radioButtonDuration.Padding = new System.Windows.Forms.Padding(0, 0, 5, 0);
+            this.radioButtonDuration.Size = new System.Drawing.Size(111, 19);
             this.radioButtonDuration.TabIndex = 3;
             this.radioButtonDuration.Tag = "Click for a specified amount of time";
             this.radioButtonDuration.Text = "Duration (secs):";
@@ -228,7 +229,7 @@ namespace AutoClicker
             this.numericUpDownClicks.BackColor = System.Drawing.Color.White;
             this.numericUpDownClicks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.numericUpDownClicks.Enabled = false;
-            this.numericUpDownClicks.Location = new System.Drawing.Point(126, 56);
+            this.numericUpDownClicks.Location = new System.Drawing.Point(140, 56);
             this.numericUpDownClicks.Maximum = new decimal(new int[] {
             1000000,
             0,
@@ -253,9 +254,10 @@ namespace AutoClicker
             // 
             this.radioButtonClicks.AutoSize = true;
             this.radioButtonClicks.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.radioButtonClicks.Location = new System.Drawing.Point(13, 56);
+            this.radioButtonClicks.Location = new System.Drawing.Point(18, 56);
             this.radioButtonClicks.Name = "radioButtonClicks";
-            this.radioButtonClicks.Size = new System.Drawing.Size(114, 19);
+            this.radioButtonClicks.Padding = new System.Windows.Forms.Padding(0, 0, 5, 0);
+            this.radioButtonClicks.Size = new System.Drawing.Size(119, 19);
             this.radioButtonClicks.TabIndex = 1;
             this.radioButtonClicks.Tag = "Click a specific number of times then stop";
             this.radioButtonClicks.Text = "Number of Clicks:";
@@ -267,7 +269,7 @@ namespace AutoClicker
             this.radioButtonIndefinite.AutoSize = true;
             this.radioButtonIndefinite.Checked = true;
             this.radioButtonIndefinite.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.radioButtonIndefinite.Location = new System.Drawing.Point(13, 24);
+            this.radioButtonIndefinite.Location = new System.Drawing.Point(18, 24);
             this.radioButtonIndefinite.Name = "radioButtonIndefinite";
             this.radioButtonIndefinite.Size = new System.Drawing.Size(107, 19);
             this.radioButtonIndefinite.TabIndex = 0;
@@ -367,7 +369,7 @@ namespace AutoClicker
             this.mainTableLayoutPanel.RowCount = 6;
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 145F));
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 150F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
