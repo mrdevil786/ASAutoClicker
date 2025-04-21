@@ -112,6 +112,9 @@ namespace AutoClicker
             
             // Pre-initialize input structures
             InitializeInputStructures();
+
+            // Set up tooltips
+            SetupTooltips();
         }
         
         private void InitializeMouseButtonComboBox()
@@ -535,6 +538,40 @@ namespace AutoClicker
             
             // Close the application
             Application.Exit();
+        }
+
+        private void SetupTooltips()
+        {
+            // Remove all existing tooltips (removing direct designer-generated tooltip assignments)
+            toolTip.RemoveAll();
+            
+            // Set tooltips for controls programmatically
+            toolTip.SetToolTip(intervalTextBox, "Enter a value in milliseconds (1000ms = 1 second)");
+            toolTip.SetToolTip(startStopButton, "Start or stop the auto clicker");
+            toolTip.SetToolTip(groupBoxClickOptions, "Configure how long the auto-clicker should run");
+            toolTip.SetToolTip(comboBoxMouseButton, "Select which mouse button to click");
+            toolTip.SetToolTip(label1, "Set the time between clicks in milliseconds (1000ms = 1 second)");
+            
+            // Properly set tooltips for radio buttons based on their tag values
+            toolTip.SetToolTip(radioButtonIndefinite, radioButtonIndefinite.Tag != null ? radioButtonIndefinite.Tag.ToString() : "Keep clicking until manually stopped");
+            toolTip.SetToolTip(radioButtonClicks, radioButtonClicks.Tag != null ? radioButtonClicks.Tag.ToString() : "Click a specific number of times then stop");
+            toolTip.SetToolTip(radioButtonDuration, radioButtonDuration.Tag != null ? radioButtonDuration.Tag.ToString() : "Click for a specified amount of time");
+            
+            // Set tooltips for numeric controls based on their tag values
+            toolTip.SetToolTip(numericUpDownClicks, numericUpDownClicks.Tag != null ? numericUpDownClicks.Tag.ToString() : "Set the number of clicks to perform");
+            toolTip.SetToolTip(numericUpDownDuration, numericUpDownDuration.Tag != null ? numericUpDownDuration.Tag.ToString() : "Set the duration in seconds for auto-clicking");
+        }
+
+        private void startStopButton_MouseEnter(object sender, EventArgs e)
+        {
+            // Darker blue on hover
+            startStopButton.BackColor = System.Drawing.Color.FromArgb(0, 102, 184);
+        }
+
+        private void startStopButton_MouseLeave(object sender, EventArgs e)
+        {
+            // Return to original blue color
+            startStopButton.BackColor = System.Drawing.Color.FromArgb(0, 122, 204);
         }
     }
 }
