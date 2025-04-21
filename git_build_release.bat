@@ -5,8 +5,9 @@ echo ===== AutoClicker Release Builder =====
 
 set /p VERSION="Enter release version (e.g. 1.0.0): "
 
-REM Validate version format - improved regex pattern with better error handling
-echo %VERSION% | findstr /r "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" > nul
+REM Validate version - using a much simpler approach
+set "PATTERN=[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
+echo %VERSION% | findstr /R /C:"^%PATTERN%$" > nul
 if %errorlevel% neq 0 (
     echo Error: Invalid version format detected.
     echo.

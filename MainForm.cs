@@ -7,6 +7,7 @@ using System.Diagnostics; // For Stopwatch
 using System.Windows.Forms;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 
 namespace AutoClicker
 {
@@ -441,6 +442,26 @@ namespace AutoClicker
         private void ShowMenuItem_Click(object sender, EventArgs e)
         {
             RestoreFromTray();
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Show the about form
+            using (AboutForm aboutForm = new AboutForm())
+            {
+                // Set the form icon
+                aboutForm.Icon = this.Icon;
+                
+                // If form has a PictureBox for the icon, set it
+                PictureBox iconBox = aboutForm.Controls.Find("pictureBoxIcon", true).FirstOrDefault() as PictureBox;
+                if (iconBox != null)
+                {
+                    iconBox.Image = this.Icon.ToBitmap();
+                }
+                
+                // Show dialog
+                aboutForm.ShowDialog(this);
+            }
         }
 
         private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
