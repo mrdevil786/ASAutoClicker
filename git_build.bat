@@ -4,20 +4,11 @@ SETLOCAL EnableDelayedExpansion
 echo ===== AutoClicker Release Builder =====
 
 set /p VERSION="Enter release version (e.g. 1.0.0): "
+echo You entered: %VERSION%
 
-REM Validate version - using a much simpler approach
-set "PATTERN=[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
-echo %VERSION% | findstr /R /C:"^%PATTERN%$" > nul
-if %errorlevel% neq 0 (
-    echo Error: Invalid version format detected.
-    echo.
-    echo Your input: %VERSION%
-    echo Required format: X.Y.Z (where X, Y, and Z are numbers)
-    echo Examples: 1.0.0, 2.1.5, 1.12.3
-    echo.
-    pause
-    exit /b 1
-)
+echo.
+echo Preparing release version %VERSION%...
+echo.
 
 echo Checking if version v%VERSION% exists...
 
@@ -70,7 +61,7 @@ if %errorlevel% neq 0 (
     echo Restoring backup of AssemblyInfo.cs...
     copy /Y Properties\AssemblyInfo.cs.bak Properties\AssemblyInfo.cs >nul
     del Properties\AssemblyInfo.cs.bak >nul
-    echo Build process failed. Please check the format of the version number.
+    echo Process failed. Please check the format of the version number.
     pause
     exit /b 1
 )
@@ -79,7 +70,7 @@ REM Clean up backup if everything is fine
 del Properties\AssemblyInfo.cs.bak >nul
 
 echo Adding modified files...
-git add MainForm.cs Program.cs MainForm.Designer.cs Properties/AssemblyInfo.cs build_release.bat README.md
+git add MainForm.cs Program.cs MainForm.Designer.cs Properties/AssemblyInfo.cs README.md
 
 REM Check if there are changes to commit
 git diff --cached --quiet
@@ -90,16 +81,6 @@ if %errorlevel% neq 0 (
     echo No changes to commit, skipping commit step.
 )
 
-REM Build the release version
-echo Building release...
-msbuild AutoClicker.sln /p:Configuration=Release /t:Clean,Build
-
-if %errorlevel% neq 0 (
-    echo Build failed! Aborting release process.
-    pause
-    exit /b 1
-)
-
 echo Creating new v%VERSION% tag...
 git tag -a v%VERSION% -m "Release version %VERSION% with optimizations and improvements"
 
@@ -107,10 +88,12 @@ echo Pushing changes to remote...
 git push origin %BRANCH%
 git push origin v%VERSION%
 
-echo ===== Release build process completed successfully =====
+echo ===== Release process completed successfully =====
 echo Version: v%VERSION%
-echo Built release is available in bin\Release\AutoClicker.exe
-echo Release changes have been committed and tagged.
+echo Tag has been pushed to GitHub
+echo GitHub Actions should now start building the release
+echo.
+echo Check the Actions tab in your GitHub repository to monitor the build progress.
 
 pause
 ENDLOCAL 
