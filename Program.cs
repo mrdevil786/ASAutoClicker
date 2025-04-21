@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using System.Security.Principal;
 
 namespace AutoClicker
 {
@@ -13,16 +14,24 @@ namespace AutoClicker
     static class Program
     {
         // Win32 API imports for window handling
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", SetLastError = true)]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", SetLastError = true)]
         private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool IsIconic(IntPtr hWnd);
 
         private const int SW_RESTORE = 9;
 
-        // Mutex name for single instance check
-        private static readonly string ApplicationMutexName = "AutoClickerApplicationMutex";
+        // Mutex name for single instance check - include user ID to allow multiple users to run the app
+        private static readonly string ApplicationMutexName = $"AutoClickerApplicationMutex-{GetCurrentUserSid()}";
+
+        // Timer to retry finding and activating existing instance 
+        private static System.Threading.Timer retryTimer;
+        private static int retryCount = 0;
+        private static readonly int MaxRetries = 3;
 
         /// <summary>
         /// The main entry point for the application.
@@ -30,41 +39,156 @@ namespace AutoClicker
         [STAThread]
         static void Main()
         {
-            // Check for correct .NET Framework version programmatically instead of using config file
+            // Enable better-looking, properly scaled controls and visual styles
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            
+            // Check for correct .NET Framework version programmatically
             if (!EnsureCorrectFrameworkVersion())
             {
                 return; // Exit if framework version is insufficient
             }
 
+            // Set up global exception handler
+            Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+
             try
             {
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                
-                // Ensure only one instance is running
                 bool createdNew;
-                using (Mutex mutex = new Mutex(true, ApplicationMutexName, out createdNew))
+                Mutex mutex = null;
+                
+                try
                 {
-                    if (createdNew)
+                    // Try to create or open the mutex
+                    mutex = new Mutex(true, ApplicationMutexName, out createdNew);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // If access denied (can happen in some security configurations), use a simplified name
+                    ApplicationMutexName = "AutoClickerApplicationMutex-Simplified";
+                    mutex = new Mutex(true, ApplicationMutexName, out createdNew);
+                }
+                
+                if (createdNew)
+                {
+                    // First instance - run normally
+                    using (mutex)
                     {
                         Application.Run(new MainForm());
                     }
-                    else
+                }
+                else
+                {
+                    // Release mutex immediately if we're not the first instance
+                    if (mutex != null)
                     {
-                        // Try to activate the existing instance
-                        if (!TryActivateExistingInstance())
-                        {
-                            MessageBox.Show("AutoClicker is already running.", "AutoClicker", 
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
+                        mutex.Close();
+                        mutex = null;
+                    }
+                    
+                    // Try to activate the existing instance with retry mechanism
+                    retryCount = 0;
+                    if (!TryActivateExistingInstance())
+                    {
+                        // If immediate activation fails, try a few more times on a timer
+                        // This helps when the other instance is starting up or minimized to tray
+                        retryTimer = new System.Threading.Timer(
+                            RetryActivation, 
+                            null, 
+                            500, // Start after 500ms 
+                            500  // Try every 500ms
+                        );
+                        
+                        // Wait for retry attempts to complete
+                        Thread.Sleep(MaxRetries * 500 + 100);
                     }
                 }
             }
             catch (Exception ex)
             {
                 // Handle unexpected errors during startup
-                MessageBox.Show("An error occurred during startup: " + ex.Message, 
+                MessageBox.Show($"An error occurred during startup: {ex.Message}\n\n{ex.StackTrace}", 
                     "AutoClicker Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Retry activation of existing instance on a timer
+        /// </summary>
+        private static void RetryActivation(object state)
+        {
+            retryCount++;
+            if (TryActivateExistingInstance() || retryCount >= MaxRetries)
+            {
+                // Success or max retries reached - clean up timer
+                retryTimer.Dispose();
+                retryTimer = null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current user's SID as a string to make the mutex name unique per user
+        /// </summary>
+        private static string GetCurrentUserSid()
+        {
+            try
+            {
+                WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                return identity.User.Value;
+            }
+            catch
+            {
+                // If we can't get the SID for some reason, use a fallback
+                return "DefaultUser";
+            }
+        }
+
+        /// <summary>
+        /// Handles unhandled exceptions in the main UI thread
+        /// </summary>
+        private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
+        {
+            HandleUnhandledException(e.Exception);
+        }
+
+        /// <summary>
+        /// Handles unhandled exceptions in non-UI threads
+        /// </summary>
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            HandleUnhandledException(e.ExceptionObject as Exception);
+        }
+
+        /// <summary>
+        /// Common handler for all unhandled exceptions
+        /// </summary>
+        private static void HandleUnhandledException(Exception ex)
+        {
+            try
+            {
+                string errorMsg = $"An unexpected error occurred:\n\n{ex.Message}";
+                
+                // Log to debug output
+                Debug.WriteLine($"Unhandled exception: {ex}");
+                
+                // Show error message to user
+                MessageBox.Show(errorMsg, "AutoClicker Error", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch
+            {
+                // If showing the error fails, there's not much we can do
+                try
+                {
+                    MessageBox.Show("A critical error occurred.", 
+                        "Critical Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch
+                {
+                    // Last resort - if even a simple message box fails, just give up
+                }
             }
         }
 
@@ -85,7 +209,13 @@ namespace AutoClicker
                         IntPtr mainWindowHandle = process.MainWindowHandle;
                         if (mainWindowHandle != IntPtr.Zero)
                         {
-                            ShowWindow(mainWindowHandle, SW_RESTORE);
+                            // If the window is minimized, restore it
+                            if (IsIconic(mainWindowHandle))
+                            {
+                                ShowWindow(mainWindowHandle, SW_RESTORE);
+                            }
+                            
+                            // Activate the window
                             SetForegroundWindow(mainWindowHandle);
                             return true;
                         }
@@ -93,9 +223,10 @@ namespace AutoClicker
                 }
                 return false;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // If there's any error, just return false to show the message
+                // Log failure but don't crash
+                Debug.WriteLine($"Error activating existing instance: {ex.Message}");
                 return false;
             }
         }
@@ -119,12 +250,22 @@ namespace AutoClicker
                         // .NET Framework 4.7.2 corresponds to value 461808
                         if (releaseKey < 461808)
                         {
-                            MessageBox.Show(
-                                "This application requires .NET Framework 4.7.2 or higher.\n" +
-                                "Please install the latest .NET Framework from Microsoft's website.",
+                            DialogResult result = MessageBox.Show(
+                                "This application requires .NET Framework 4.7.2 or higher.\n\n" +
+                                "Would you like to open the download page?",
                                 "Framework Version Error",
-                                MessageBoxButtons.OK,
+                                MessageBoxButtons.YesNo,
                                 MessageBoxIcon.Error);
+                                
+                            if (result == DialogResult.Yes)
+                            {
+                                // Open Microsoft's .NET download page
+                                Process.Start(new ProcessStartInfo
+                                {
+                                    FileName = "https://dotnet.microsoft.com/download/dotnet-framework",
+                                    UseShellExecute = true
+                                });
+                            }
                             return false;
                         }
                         return true;
@@ -132,12 +273,23 @@ namespace AutoClicker
                     else
                     {
                         // Could not detect .NET Framework version
-                        MessageBox.Show(
+                        DialogResult result = MessageBox.Show(
                             "Could not detect .NET Framework version.\n" +
-                            "This application requires .NET Framework 4.7.2 or higher.",
+                            "This application requires .NET Framework 4.7.2 or higher.\n\n" +
+                            "Would you like to open the download page?",
                             "Framework Detection Error",
-                            MessageBoxButtons.OK,
+                            MessageBoxButtons.YesNo,
                             MessageBoxIcon.Error);
+                            
+                        if (result == DialogResult.Yes)
+                        {
+                            // Open Microsoft's .NET download page
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = "https://dotnet.microsoft.com/download/dotnet-framework",
+                                UseShellExecute = true
+                            });
+                        }
                         return false;
                     }
                 }

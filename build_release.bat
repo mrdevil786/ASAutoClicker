@@ -5,10 +5,15 @@ echo ===== AutoClicker Release Builder =====
 
 set /p VERSION="Enter release version (e.g. 1.0.0): "
 
-REM Validate version format
+REM Validate version format - improved regex pattern with better error handling
 echo %VERSION% | findstr /r "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" > nul
 if %errorlevel% neq 0 (
-    echo Invalid version format. Please use format like 1.0.0
+    echo Error: Invalid version format detected.
+    echo.
+    echo Your input: %VERSION%
+    echo Required format: X.Y.Z (where X, Y, and Z are numbers)
+    echo Examples: 1.0.0, 2.1.5, 1.12.3
+    echo.
     pause
     exit /b 1
 )
@@ -51,9 +56,26 @@ REM Get current branch name
 for /f "tokens=*" %%a in ('git rev-parse --abbrev-ref HEAD') do set BRANCH=%%a
 echo Current branch is: %BRANCH%
 
+REM Create backup of AssemblyInfo.cs before modifying
+copy /Y Properties\AssemblyInfo.cs Properties\AssemblyInfo.cs.bak >nul
+
 REM Update AssemblyInfo.cs with new version
 echo Updating version in AssemblyInfo.cs to %VERSION%...
 powershell -Command "(Get-Content Properties\AssemblyInfo.cs) -replace 'AssemblyVersion\(\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"\)', 'AssemblyVersion(\"%VERSION%.0\")' -replace 'AssemblyFileVersion\(\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"\)', 'AssemblyFileVersion(\"%VERSION%.0\")' | Set-Content Properties\AssemblyInfo.cs"
+
+REM Verify that the replacement was successful
+powershell -Command "if (-not (Select-String -Path 'Properties\AssemblyInfo.cs' -Pattern 'AssemblyVersion\(\"%VERSION%.0\"\)')) { Write-Host 'Error: Failed to update version in AssemblyInfo.cs'; exit 1 }"
+if %errorlevel% neq 0 (
+    echo Restoring backup of AssemblyInfo.cs...
+    copy /Y Properties\AssemblyInfo.cs.bak Properties\AssemblyInfo.cs >nul
+    del Properties\AssemblyInfo.cs.bak >nul
+    echo Build process failed. Please check the format of the version number.
+    pause
+    exit /b 1
+)
+
+REM Clean up backup if everything is fine
+del Properties\AssemblyInfo.cs.bak >nul
 
 echo Adding modified files...
 git add MainForm.cs Program.cs MainForm.Designer.cs Properties/AssemblyInfo.cs build_release.bat README.md
