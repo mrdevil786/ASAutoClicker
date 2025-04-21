@@ -22,7 +22,7 @@ namespace AutoClicker
         private const int SW_RESTORE = 9;
 
         // Unique mutex name for this application
-        private static readonly string ApplicationMutexName = "Global\\ASClickerApplication";
+        // private static readonly string ApplicationMutexName = "Global\\ASClickerApplication";
 
         /// <summary>
         /// The main entry point for the application.
@@ -143,4 +143,4 @@ namespace AutoClicker
             }
         }
     }
-} 
+}

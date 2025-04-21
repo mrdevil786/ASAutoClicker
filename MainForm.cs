@@ -392,6 +392,11 @@ namespace AutoClicker
             }
         }
 
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            // Handle form resize logic here
+        }
+
         private void CloseApplication()
         {
             // Stop the clicker if running
