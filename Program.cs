@@ -242,56 +242,63 @@ namespace AutoClicker
             {
                 // Check if .NET Framework 4.7.2 or higher is installed
                 const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
-                using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(subkey))
+                
+                using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)?.OpenSubKey(subkey))
                 {
                     if (ndpKey != null && ndpKey.GetValue("Release") != null)
                     {
-                        int releaseKey = (int)ndpKey.GetValue("Release");
-                        // .NET Framework 4.7.2 corresponds to value 461808
-                        if (releaseKey < 461808)
+                        try
                         {
-                            DialogResult result = MessageBox.Show(
-                                "This application requires .NET Framework 4.7.2 or higher.\n\n" +
-                                "Would you like to open the download page?",
-                                "Framework Version Error",
-                                MessageBoxButtons.YesNo,
-                                MessageBoxIcon.Error);
-                                
-                            if (result == DialogResult.Yes)
+                            int releaseKey = Convert.ToInt32(ndpKey.GetValue("Release"));
+                            // .NET Framework 4.7.2 corresponds to value 461808
+                            if (releaseKey < 461808)
                             {
-                                // Open Microsoft's .NET download page
-                                Process.Start(new ProcessStartInfo
+                                DialogResult result = MessageBox.Show(
+                                    "This application requires .NET Framework 4.7.2 or higher.\n\n" +
+                                    "Would you like to open the download page?",
+                                    "Framework Version Error",
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Error);
+                                    
+                                if (result == DialogResult.Yes)
                                 {
-                                    FileName = "https://dotnet.microsoft.com/download/dotnet-framework",
-                                    UseShellExecute = true
-                                });
+                                    // Open Microsoft's .NET download page
+                                    Process.Start(new ProcessStartInfo
+                                    {
+                                        FileName = "https://dotnet.microsoft.com/download/dotnet-framework",
+                                        UseShellExecute = true
+                                    });
+                                }
+                                return false;
                             }
-                            return false;
+                            return true;
                         }
-                        return true;
-                    }
-                    else
-                    {
-                        // Could not detect .NET Framework version
-                        DialogResult result = MessageBox.Show(
-                            "Could not detect .NET Framework version.\n" +
-                            "This application requires .NET Framework 4.7.2 or higher.\n\n" +
-                            "Would you like to open the download page?",
-                            "Framework Detection Error",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Error);
-                            
-                        if (result == DialogResult.Yes)
+                        catch (InvalidCastException)
                         {
-                            // Open Microsoft's .NET download page
-                            Process.Start(new ProcessStartInfo
-                            {
-                                FileName = "https://dotnet.microsoft.com/download/dotnet-framework",
-                                UseShellExecute = true
-                            });
+                            Debug.WriteLine("Unable to convert Release value to integer.");
+                            // Continue to the generic error handler
                         }
-                        return false;
                     }
+                    
+                    // Could not detect .NET Framework version
+                    DialogResult result = MessageBox.Show(
+                        "Could not detect .NET Framework version.\n" +
+                        "This application requires .NET Framework 4.7.2 or higher.\n\n" +
+                        "Would you like to open the download page?",
+                        "Framework Detection Error",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Error);
+                        
+                    if (result == DialogResult.Yes)
+                    {
+                        // Open Microsoft's .NET download page
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "https://dotnet.microsoft.com/download/dotnet-framework",
+                            UseShellExecute = true
+                        });
+                    }
+                    return false;
                 }
             }
             catch (Exception ex)

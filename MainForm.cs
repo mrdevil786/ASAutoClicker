@@ -90,6 +90,7 @@ namespace AutoClicker
 
             // Set the form title with version info
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            // Display only major.minor.build, ignore revision to match release versioning format
             this.Text = $"AutoClicker v{version.Major}.{version.Minor}.{version.Build}";
 
             // Initialize notification icon
