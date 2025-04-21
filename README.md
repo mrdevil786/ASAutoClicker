@@ -8,8 +8,13 @@ A simple Windows application that simulates mouse clicks at specified intervals.
 
 - Start/Stop clicking with global hotkey (Ctrl+Shift+A)
 - Adjustable click interval in milliseconds
+- Selectable mouse button (Left, Right, Middle)
+- Click limit options:
+  - Click indefinitely
+  - Stop after a specific number of clicks
+  - Stop after a specific duration (in seconds)
 - System tray icon for minimized operation
-- Simulates left mouse clicks at the current cursor position
+- Simulates mouse clicks at the current cursor position
 - Background operation with minimal resource usage
 - Single instance application (prevents multiple instances)
 
@@ -18,10 +23,15 @@ A simple Windows application that simulates mouse clicks at specified intervals.
 1. Download the latest release from the [Releases](https://github.com/mrdevil786/ASAutoClicker/releases) page
 2. Launch the application (AutoClicker.exe)
 3. Set the click interval in milliseconds (default: 100ms)
-4. Press the "Start" button or use the global hotkey (Ctrl+Shift+A) to start clicking
-5. Press the same hotkey (Ctrl+Shift+A) to stop clicking
-6. The application can be minimized to the system tray
-7. Right-click the tray icon to show the application or exit it
+4. Choose the desired click options:
+   - **Click Indefinitely:** Clicks will continue until stopped manually.
+   - **Number of Clicks:** Set the total number of clicks to perform.
+   - **Duration (secs):** Set the duration in seconds for which clicking should occur.
+5. Select the mouse button (Left, Right, or Middle) to simulate.
+6. Press the "Start" button or use the global hotkey (Ctrl+Shift+A) to start clicking.
+7. Press the same hotkey (Ctrl+Shift+A) to stop clicking manually, or wait for the set limit (if applicable).
+8. The application can be minimized to the system tray.
+9. Right-click the tray icon to show the application or exit it.
 
 ## Windows Security Warning
 
@@ -86,4 +96,4 @@ This project uses GitHub Actions for continuous integration. Each push to the re
 
 ## License
 
-MIT License 
+MIT License
