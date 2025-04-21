@@ -91,7 +91,7 @@ namespace AutoClicker
             // Set the form title with version info
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
             // Display only major.minor.build, ignore revision to match release versioning format
-            this.Text = $"AutoClicker v{version.Major}.{version.Minor}.{version.Build}";
+            this.Text = string.Format("AutoClicker v{0}.{1}.{2}", version.Major, version.Minor, version.Build);
 
             // Initialize notification icon
             InitializeNotifyIcon();
@@ -161,8 +161,8 @@ namespace AutoClicker
             if (!_hotkeyRegistered)
             {
                 int error = Marshal.GetLastWin32Error();
-                MessageBox.Show($"Could not register the hotkey (Ctrl+Shift+A). It may be in use by another application. Error code: {error}",
-                    "Hotkey Registration Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(string.Format("Could not register the hotkey (Ctrl+Shift+A). It may be in use by another application. Error code: {0}",
+                    error), "Hotkey Registration Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
         
@@ -213,7 +213,8 @@ namespace AutoClicker
         // Event handler for radio buttons changing click limit type
         private void radioButtonClickLimit_CheckedChanged(object sender, EventArgs e)
         {
-            if (sender is RadioButton rb && rb.Checked)
+            RadioButton rb = sender as RadioButton;
+            if (rb != null && rb.Checked)
             {
                 if (rb == radioButtonIndefinite)
                 {
@@ -239,7 +240,7 @@ namespace AutoClicker
         // Event handler for mouse button selection
         private void ComboBoxMouseButton_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selectedButton = comboBoxMouseButton.SelectedItem?.ToString();
+            string selectedButton = comboBoxMouseButton.SelectedItem != null ? comboBoxMouseButton.SelectedItem.ToString() : null;
             switch (selectedButton)
             {
                 case "Left":
@@ -285,8 +286,8 @@ namespace AutoClicker
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"Error starting clicker: {ex.Message}");
-                    MessageBox.Show($"Error starting the auto clicker: {ex.Message}", 
+                    Debug.WriteLine(string.Format("Error starting clicker: {0}", ex.Message));
+                    MessageBox.Show(string.Format("Error starting the auto clicker: {0}", ex.Message), 
                         "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     
                     // Make sure we reset to stopped state
@@ -305,7 +306,7 @@ namespace AutoClicker
                 {
                     _isClicking = false;
                     _durationStopwatch.Stop();
-                    UpdateStatus($"Stopped (Performed {_currentClickCount} clicks)");
+                    UpdateStatus(string.Format("Stopped (Performed {0} clicks)", _currentClickCount));
                     startStopButton.Text = "Start";
 
                     // Cancel the click worker
@@ -325,7 +326,7 @@ namespace AutoClicker
                 return;
             }
             
-            statusLabel.Text = $"Status: {status}";
+            statusLabel.Text = string.Format("Status: {0}", status);
         }
 
         private void ClickWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -367,7 +368,7 @@ namespace AutoClicker
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"Error in click worker: {ex.Message}");
+                    Debug.WriteLine(string.Format("Error in click worker: {0}", ex.Message));
                     // Continue execution despite errors
                 }
             }
@@ -403,14 +404,15 @@ namespace AutoClicker
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error performing click: {ex.Message}");
+                Debug.WriteLine(string.Format("Error performing click: {0}", ex.Message));
                 throw; // Rethrow to let the worker handle it
             }
         }
 
         private void intervalTextBox_TextChanged(object sender, EventArgs e)
         {
-            if (int.TryParse(intervalTextBox.Text, out int interval) && interval > 0)
+            int interval;
+            if (int.TryParse(intervalTextBox.Text, out interval) && interval > 0)
             {
                 _clickInterval = interval;
             }

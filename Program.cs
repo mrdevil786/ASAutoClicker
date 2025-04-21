@@ -26,7 +26,7 @@ namespace AutoClicker
         private const int SW_RESTORE = 9;
 
         // Mutex name for single instance check - include user ID to allow multiple users to run the app
-        private static string ApplicationMutexName = $"AutoClickerApplicationMutex-{GetCurrentUserSid()}";
+        private static string ApplicationMutexName = string.Format("AutoClickerApplicationMutex-{0}", GetCurrentUserSid());
 
         // Timer to retry finding and activating existing instance 
         private static System.Threading.Timer retryTimer;
@@ -109,7 +109,7 @@ namespace AutoClicker
             catch (Exception ex)
             {
                 // Handle unexpected errors during startup
-                MessageBox.Show($"An error occurred during startup: {ex.Message}\n\n{ex.StackTrace}", 
+                MessageBox.Show(string.Format("An error occurred during startup: {0}\n\n{1}", ex.Message, ex.StackTrace), 
                     "AutoClicker Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -168,10 +168,10 @@ namespace AutoClicker
         {
             try
             {
-                string errorMsg = $"An unexpected error occurred:\n\n{ex.Message}";
+                string errorMsg = string.Format("An unexpected error occurred:\n\n{0}", ex.Message);
                 
                 // Log to debug output
-                Debug.WriteLine($"Unhandled exception: {ex}");
+                Debug.WriteLine(string.Format("Unhandled exception: {0}", ex));
                 
                 // Show error message to user
                 MessageBox.Show(errorMsg, "AutoClicker Error", 
@@ -226,7 +226,7 @@ namespace AutoClicker
             catch (Exception ex)
             {
                 // Log failure but don't crash
-                Debug.WriteLine($"Error activating existing instance: {ex.Message}");
+                Debug.WriteLine(string.Format("Error activating existing instance: {0}", ex.Message));
                 return false;
             }
         }
@@ -243,7 +243,10 @@ namespace AutoClicker
                 // Check if .NET Framework 4.7.2 or higher is installed
                 const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
                 
-                using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)?.OpenSubKey(subkey))
+                RegistryKey baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
+                RegistryKey ndpKey = baseKey != null ? baseKey.OpenSubKey(subkey) : null;
+                
+                using (ndpKey)
                 {
                     if (ndpKey != null && ndpKey.GetValue("Release") != null)
                     {
@@ -263,7 +266,7 @@ namespace AutoClicker
                                 if (result == DialogResult.Yes)
                                 {
                                     // Open Microsoft's .NET download page
-                                    Process.Start(new ProcessStartInfo
+                                    Process.Start(new ProcessStartInfo()
                                     {
                                         FileName = "https://dotnet.microsoft.com/download/dotnet-framework",
                                         UseShellExecute = true
@@ -292,7 +295,7 @@ namespace AutoClicker
                     if (downloadResult == DialogResult.Yes)
                     {
                         // Open Microsoft's .NET download page
-                        Process.Start(new ProcessStartInfo
+                        Process.Start(new ProcessStartInfo()
                         {
                             FileName = "https://dotnet.microsoft.com/download/dotnet-framework",
                             UseShellExecute = true
@@ -305,7 +308,7 @@ namespace AutoClicker
             {
                 // Handle any exceptions during the check
                 MessageBox.Show(
-                    $"Error checking .NET Framework version: {ex.Message}\n" +
+                    string.Format("Error checking .NET Framework version: {0}\n", ex.Message) +
                     "This application requires .NET Framework 4.7.2 or higher.",
                     "Framework Check Error",
                     MessageBoxButtons.OK,
