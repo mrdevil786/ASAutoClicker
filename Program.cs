@@ -21,8 +21,8 @@ namespace AutoClicker
 
         private const int SW_RESTORE = 9;
 
-        // Unique mutex name for this application
-        // private static readonly string ApplicationMutexName = "Global\\ASClickerApplication";
+        // Mutex name for single instance check
+        private static readonly string ApplicationMutexName = "AutoClickerApplicationMutex";
 
         /// <summary>
         /// The main entry point for the application.
@@ -31,7 +31,10 @@ namespace AutoClicker
         static void Main()
         {
             // Check for correct .NET Framework version programmatically instead of using config file
-            EnsureCorrectFrameworkVersion();
+            if (!EnsureCorrectFrameworkVersion())
+            {
+                return; // Exit if framework version is insufficient
+            }
 
             try
             {
@@ -40,7 +43,7 @@ namespace AutoClicker
                 
                 // Ensure only one instance is running
                 bool createdNew;
-                using (System.Threading.Mutex mutex = new System.Threading.Mutex(true, "AutoClickerApplicationMutex", out createdNew))
+                using (Mutex mutex = new Mutex(true, ApplicationMutexName, out createdNew))
                 {
                     if (createdNew)
                     {
@@ -48,7 +51,12 @@ namespace AutoClicker
                     }
                     else
                     {
-                        MessageBox.Show("AutoClicker is already running.", "AutoClicker", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        // Try to activate the existing instance
+                        if (!TryActivateExistingInstance())
+                        {
+                            MessageBox.Show("AutoClicker is already running.", "AutoClicker", 
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
                 }
             }
@@ -61,32 +69,34 @@ namespace AutoClicker
         }
 
         /// <summary>
-        /// Runs the main application form
-        /// </summary>
-        private static void RunApplication()
-        {
-            Application.Run(new MainForm());
-        }
-
-        /// <summary>
         /// Activates an existing instance of the application if one is found
         /// </summary>
-        private static void ActivateExistingInstance()
+        /// <returns>True if successfully activated an existing instance, false otherwise</returns>
+        private static bool TryActivateExistingInstance()
         {
-            Process currentProcess = Process.GetCurrentProcess();
-            foreach (Process process in Process.GetProcessesByName(currentProcess.ProcessName))
+            try
             {
-                if (process.Id != currentProcess.Id)
+                Process currentProcess = Process.GetCurrentProcess();
+                foreach (Process process in Process.GetProcessesByName(currentProcess.ProcessName))
                 {
-                    // Bring the existing window to the foreground
-                    IntPtr mainWindowHandle = process.MainWindowHandle;
-                    if (mainWindowHandle != IntPtr.Zero)
+                    if (process.Id != currentProcess.Id)
                     {
-                        ShowWindow(mainWindowHandle, SW_RESTORE);
-                        SetForegroundWindow(mainWindowHandle);
+                        // Bring the existing window to the foreground
+                        IntPtr mainWindowHandle = process.MainWindowHandle;
+                        if (mainWindowHandle != IntPtr.Zero)
+                        {
+                            ShowWindow(mainWindowHandle, SW_RESTORE);
+                            SetForegroundWindow(mainWindowHandle);
+                            return true;
+                        }
                     }
-                    return; // Exit the new instance
                 }
+                return false;
+            }
+            catch (Exception)
+            {
+                // If there's any error, just return false to show the message
+                return false;
             }
         }
 
@@ -94,7 +104,8 @@ namespace AutoClicker
         /// Ensures that the correct .NET Framework version is installed
         /// This replaces the functionality of the .config file specifying the framework version
         /// </summary>
-        private static void EnsureCorrectFrameworkVersion()
+        /// <returns>True if the framework version is sufficient, false otherwise</returns>
+        private static bool EnsureCorrectFrameworkVersion()
         {
             try
             {
@@ -114,8 +125,9 @@ namespace AutoClicker
                                 "Framework Version Error",
                                 MessageBoxButtons.OK,
                                 MessageBoxIcon.Error);
-                            Environment.Exit(1);
+                            return false;
                         }
+                        return true;
                     }
                     else
                     {
@@ -126,7 +138,7 @@ namespace AutoClicker
                             "Framework Detection Error",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Error);
-                        Environment.Exit(1);
+                        return false;
                     }
                 }
             }
@@ -139,7 +151,7 @@ namespace AutoClicker
                     "Framework Check Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                Environment.Exit(1);
+                return false;
             }
         }
     }

@@ -58,7 +58,7 @@ namespace AutoClicker
 
         // For the click thread
         private BackgroundWorker clickWorker;
-        private bool isClicking = false;
+        private volatile bool isClicking = false;
         private int clickInterval = 100; // Default interval in milliseconds
         private Random random = new Random(); // Adding randomness to appear less bot-like
 
@@ -70,6 +70,9 @@ namespace AutoClicker
         private long currentClickCount = 0;
         private Stopwatch durationStopwatch = new Stopwatch();
         private MouseButtons selectedMouseButton = MouseButtons.Left;
+        
+        // Thread synchronization
+        private readonly object lockObject = new object();
 
         public MainForm()
         {
@@ -93,7 +96,7 @@ namespace AutoClicker
             catch (Exception ex)
             {
                 // Just log or ignore the error - the default icon will be used
-                Console.WriteLine("Error loading icon: " + ex.Message);
+                Debug.WriteLine("Error loading icon: " + ex.Message);
             }
 
             // Set up NotifyIcon
@@ -120,7 +123,11 @@ namespace AutoClicker
             }
 
             // Register hotkey (Ctrl+Shift+A)
-            RegisterHotKey(this.Handle, HOTKEY_ID, MOD_CONTROL | MOD_SHIFT, VK_A);
+            if (!RegisterHotKey(this.Handle, HOTKEY_ID, MOD_CONTROL | MOD_SHIFT, VK_A))
+            {
+                MessageBox.Show("Could not register the hotkey (Ctrl+Shift+A). It may be in use by another application.",
+                    "Hotkey Registration Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         protected override void WndProc(ref Message m)
@@ -183,33 +190,31 @@ namespace AutoClicker
         // Event handler for mouse button selection
         private void comboBoxMouseButton_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Enum.TryParse<MouseButtons>(comboBoxMouseButton.SelectedItem.ToString(), out selectedMouseButton);
+            if (Enum.TryParse<MouseButtons>(comboBoxMouseButton.SelectedItem.ToString(), out MouseButtons button))
+            {
+                selectedMouseButton = button;
+            }
         }
 
         private void StartClicking()
         {
             if (!isClicking)
             {
-                isClicking = true;
-                isClicking = true;
-                statusLabel.Text = "Status: Running";
-                startStopButton.Text = "Stop";
-
                 // Read click limit settings
                 clickLimitCount = numericUpDownClicks.Value;
                 clickLimitDuration = numericUpDownDuration.Value;
+                
+                // Reset counters
                 currentClickCount = 0;
                 durationStopwatch.Reset();
+                durationStopwatch.Start();
+                
+                // Update UI
+                isClicking = true;
+                UpdateStatus("Running");
+                startStopButton.Text = "Stop";
 
-                // Disable options while running
-                intervalTextBox.Enabled = false;
-                groupBoxClickOptions.Enabled = false;
-                comboBoxMouseButton.Enabled = false;
-                
-                // Show notification
-                notifyIcon.ShowBalloonTip(2000, "AutoClicker", "AutoClicker started", ToolTipIcon.Info);
-                
-                // Start the clicking worker
+                // Start the click worker if it's not already running
                 if (!clickWorker.IsBusy)
                 {
                     clickWorker.RunWorkerAsync();
@@ -221,122 +226,118 @@ namespace AutoClicker
         {
             if (isClicking)
             {
-                isClicking = false;
-                isClicking = false;
-                statusLabel.Text = "Status: Stopped";
-                startStopButton.Text = "Start";
-                durationStopwatch.Stop();
-
-                // Re-enable options when stopped
-                intervalTextBox.Enabled = true;
-                groupBoxClickOptions.Enabled = true;
-                comboBoxMouseButton.Enabled = true;
-                // Ensure numeric up/downs are enabled/disabled according to radio buttons
-                radioButtonClickLimit_CheckedChanged(radioButtonClicks, EventArgs.Empty); // Trigger update
-                
-                // Show notification
-                notifyIcon.ShowBalloonTip(2000, "AutoClicker", "AutoClicker stopped", ToolTipIcon.Info);
-                
-                // Cancel the clicking worker
-                if (clickWorker.IsBusy)
+                lock (lockObject)
                 {
-                    clickWorker.CancelAsync();
+                    isClicking = false;
+                    durationStopwatch.Stop();
+                    UpdateStatus($"Stopped (Performed {currentClickCount} clicks)");
+                    startStopButton.Text = "Start";
+
+                    // Cancel the click worker
+                    if (clickWorker.IsBusy && clickWorker.WorkerSupportsCancellation)
+                    {
+                        clickWorker.CancelAsync();
+                    }
                 }
             }
+        }
+
+        private void UpdateStatus(string status)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<string>(UpdateStatus), status);
+                return;
+            }
+            
+            statusLabel.Text = $"Status: {status}";
         }
 
         private void ClickWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
-            currentClickCount = 0;
-            durationStopwatch.Restart();
-
-            while (!worker.CancellationPending)
-            {
-                // Simulate a left mouse click at the current cursor position using SendInput
-                PerformClick(selectedMouseButton);
-
-                currentClickCount++;
-
-                // Check limits
-                bool limitReached = false;
-                if (currentClickLimitType == ClickLimitType.Count && currentClickCount >= clickLimitCount)
-                {
-                    limitReached = true;
-                }
-                else if (currentClickLimitType == ClickLimitType.Duration && durationStopwatch.Elapsed.TotalSeconds >= (double)clickLimitDuration)
-                {
-                    limitReached = true;
-                }
-
-                if (limitReached)
-                {
-                    // Stop clicking from the worker thread safely
-                    this.Invoke((MethodInvoker)delegate {
-                        StopClicking();
-                    });
-                    break; // Exit the loop
-                }
-
-                // Wait for the specified interval with a small random variation to appear less bot-like
-                int variableInterval = clickInterval + random.Next(-5, 5);
-                if (variableInterval < 10) variableInterval = 10; // Ensure minimum interval
-                Thread.Sleep(variableInterval);
-            }
             
-            e.Cancel = true;
+            while (!worker.CancellationPending && isClicking)
+            {
+                // Perform the click
+                PerformClick();
+
+                // Increment click count
+                Interlocked.Increment(ref currentClickCount);
+
+                // Check click limit
+                if (currentClickLimitType == ClickLimitType.Count && currentClickCount >= (long)clickLimitCount)
+                {
+                    this.BeginInvoke(new Action(StopClicking));
+                    break;
+                }
+                else if (currentClickLimitType == ClickLimitType.Duration && 
+                         durationStopwatch.ElapsedMilliseconds >= (long)(clickLimitDuration * 1000))
+                {
+                    this.BeginInvoke(new Action(StopClicking));
+                    break;
+                }
+
+                // Apply randomness to interval if enabled (to avoid detection as a bot)
+                int currentInterval = clickInterval;
+                
+                // Introduce up to 10% variance in click timing
+                // int intervalVariance = random.Next(-clickInterval / 10, clickInterval / 10);
+                // currentInterval = Math.Max(10, clickInterval + intervalVariance);
+                
+                // Sleep for the interval
+                Thread.Sleep(currentInterval);
+            }
         }
 
-        // Perform mouse click using SendInput API
-        private void PerformClick(MouseButtons button)
+        private void PerformClick()
         {
-            // Create the input for mouse down
-            INPUT[] inputs = new INPUT[2];
-            
-            // Set flags based on selected button
-            uint downFlag = 0, upFlag = 0;
-            switch (button)
+            try
             {
-                case MouseButtons.Left:
-                    downFlag = MOUSEEVENTF_LEFTDOWN;
-                    upFlag = MOUSEEVENTF_LEFTUP;
-                    break;
-                case MouseButtons.Right:
-                    downFlag = MOUSEEVENTF_RIGHTDOWN;
-                    upFlag = MOUSEEVENTF_RIGHTUP;
-                    break;
-                case MouseButtons.Middle:
-                    downFlag = MOUSEEVENTF_MIDDLEDOWN;
-                    upFlag = MOUSEEVENTF_MIDDLEUP;
-                    break;
-            }
+                // Create input structure
+                INPUT[] inputs = new INPUT[2];
+                inputs[0].type = INPUT_MOUSE;
+                inputs[0].mi.dx = 0;
+                inputs[0].mi.dy = 0;
+                inputs[0].mi.mouseData = 0;
+                inputs[0].mi.time = 0;
+                inputs[0].mi.dwExtraInfo = IntPtr.Zero;
+                
+                inputs[1] = inputs[0]; // Copy the first input struct
 
-            // Mouse down
-            inputs[0].type = INPUT_MOUSE;
-            inputs[0].mi.dx = 0;
-            inputs[0].mi.dy = 0;
-            inputs[0].mi.mouseData = 0;
-            inputs[0].mi.dwFlags = downFlag;
-            inputs[0].mi.time = 0;
-            inputs[0].mi.dwExtraInfo = IntPtr.Zero;
-            
-            // Mouse up
-            inputs[1].type = INPUT_MOUSE;
-            inputs[1].mi.dx = 0;
-            inputs[1].mi.dy = 0;
-            inputs[1].mi.mouseData = 0;
-            inputs[1].mi.dwFlags = upFlag;
-            inputs[1].mi.time = 0;
-            inputs[1].mi.dwExtraInfo = IntPtr.Zero;
-            
-            // Send the input
-            SendInput(2, inputs, Marshal.SizeOf(typeof(INPUT)));
+                // Set appropriate mouse event flags based on the selected button
+                switch (selectedMouseButton)
+                {
+                    case MouseButtons.Left:
+                        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+                        inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+                        break;
+                    case MouseButtons.Right:
+                        inputs[0].mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
+                        inputs[1].mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+                        break;
+                    case MouseButtons.Middle:
+                        inputs[0].mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
+                        inputs[1].mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
+                        break;
+                    default:
+                        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+                        inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+                        break;
+                }
+
+                // Send the down and up inputs
+                SendInput(2, inputs, Marshal.SizeOf(typeof(INPUT)));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error performing click: {ex.Message}");
+            }
         }
 
         private void intervalTextBox_TextChanged(object sender, EventArgs e)
         {
-            int interval;
-            if (int.TryParse(intervalTextBox.Text, out interval) && interval > 0)
+            if (int.TryParse(intervalTextBox.Text, out int interval) && interval > 0)
             {
                 clickInterval = interval;
             }
@@ -394,7 +395,11 @@ namespace AutoClicker
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
-            // Handle form resize logic here
+            // Hide to tray when minimized
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                this.Hide();
+            }
         }
 
         private void CloseApplication()
@@ -413,6 +418,38 @@ namespace AutoClicker
             
             // Close the application
             Application.Exit();
+        }
+        
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Clean up resources
+                if (clickWorker != null && clickWorker.IsBusy)
+                {
+                    clickWorker.CancelAsync();
+                    // Give a short time for worker to complete
+                    Thread.Sleep(100);
+                }
+                
+                // Properly dispose of the timer
+                if (durationStopwatch != null && durationStopwatch.IsRunning)
+                {
+                    durationStopwatch.Stop();
+                }
+                
+                // Unregister hotkey to be safe
+                try
+                {
+                    UnregisterHotKey(this.Handle, HOTKEY_ID);
+                }
+                catch
+                {
+                    // Ignore errors during cleanup
+                }
+            }
+            
+            base.Dispose(disposing);
         }
     }
 }

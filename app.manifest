@@ -4,6 +4,22 @@
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
     <security>
       <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- UAC Manifest Options
+             If you want to change the Windows User Account Control level replace the 
+             requestedExecutionLevel node with one of the following:
+
+        <requestedExecutionLevel  level="asInvoker" uiAccess="false" />
+            - Default user privileges, no elevation prompt (current setting)
+        
+        <requestedExecutionLevel  level="requireAdministrator" uiAccess="false" />
+            - Runs elevated with full admin rights, with UAC prompt
+            - Consider using this if you have issues with mouse clicks in some applications
+        
+        <requestedExecutionLevel  level="highestAvailable" uiAccess="false" />
+            - Runs with the highest permissions the current user can grant
+        
+        For more information, see: https://docs.microsoft.com/en-us/windows/win32/sbscs/manifest-file-reference
+        -->
         <requestedExecutionLevel level="asInvoker" uiAccess="false" />
       </requestedPrivileges>
     </security>

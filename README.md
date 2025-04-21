@@ -17,6 +17,8 @@ A simple Windows application that simulates mouse clicks at specified intervals.
 - Simulates mouse clicks at the current cursor position
 - Background operation with minimal resource usage
 - Single instance application (prevents multiple instances)
+- Proper thread-safe implementation for reliable operation
+- Improved resource management and cleanup
 
 ## How to Use
 
@@ -32,6 +34,21 @@ A simple Windows application that simulates mouse clicks at specified intervals.
 7. Press the same hotkey (Ctrl+Shift+A) to stop clicking manually, or wait for the set limit (if applicable).
 8. The application can be minimized to the system tray.
 9. Right-click the tray icon to show the application or exit it.
+
+## Recent Improvements & Optimizations
+
+The codebase has been optimized with the following improvements:
+
+1. **Enhanced Click Mechanism**: Improved the mouse click simulation with separate down/up events
+2. **Thread Safety**: Added proper thread synchronization to prevent race conditions
+3. **Better Error Handling**: Added robust error handling throughout the application
+4. **Resource Management**: Improved resource disposal and cleanup
+5. **Performance Optimization**: More efficient background worker implementation
+6. **UI Responsiveness**: Proper use of UI thread invocation for smoother experience
+7. **Hotkey Registration**: Added better error handling for hotkey registration
+8. **Single Instance Management**: Improved the single instance activation logic
+9. **Click Duration Tracking**: Fixed issues with stopwatch for duration tracking
+10. **Memory Usage**: Optimized memory usage patterns for long-running operation
 
 ## Windows Security Warning
 
@@ -62,9 +79,11 @@ Some antivirus programs, including Windows Defender, may flag AutoClicker as a p
 To minimize false positive detections, we've implemented several best practices:
 
 1. Using modern Windows APIs (`SendInput` instead of `mouse_event`)
-2. Adding human-like randomization to click timing
+2. Adding human-like randomization to click timing (can be enabled in code)
 3. Implementing proper error handling and code structure
 4. Providing detailed assembly information and documentation
+5. Proper resource cleanup and exception handling
+6. Thread-safe implementation with synchronization mechanisms
 
 This application is open-source, so you can review all the code to verify its safety.
 
@@ -93,6 +112,7 @@ This project uses GitHub Actions for continuous integration. Each push to the re
 - When you close the application window, it will minimize to the system tray rather than exit
 - To fully exit the application, right-click the tray icon and select "Exit"
 - The hotkey works even when the application is minimized or not in focus
+- The application is thread-safe and efficiently manages system resources
 
 ## License
 
