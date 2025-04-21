@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ASAutoClicker Team")]
 [assembly: AssemblyProduct("ASAutoClicker")]
-[assembly: AssemblyCopyright("Copyright © 2023-2024 ASAutoClicker Team")]
+[assembly: AssemblyCopyright("Copyright © 2023-2025 ASAutoClicker Team")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
